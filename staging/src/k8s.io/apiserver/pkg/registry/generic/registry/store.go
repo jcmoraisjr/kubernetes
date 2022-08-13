@@ -1389,6 +1389,11 @@ func (e *Store) CompleteWithOptions(options *generic.StoreOptions) error {
 		return fmt.Errorf("store for %s has an invalid prefix %q", e.DefaultQualifiedResource.String(), opts.ResourcePrefix)
 	}
 
+	if opts.KeyFuncs != nil {
+		e.KeyRootFunc = opts.KeyFuncs.KeyRootFunc
+		e.KeyFunc = opts.KeyFuncs.KeyFunc
+	}
+
 	// Set the default behavior for storage key generation
 	if e.KeyRootFunc == nil && e.KeyFunc == nil {
 		if isNamespaced {
