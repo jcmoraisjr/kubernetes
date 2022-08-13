@@ -17,6 +17,7 @@ limitations under the License.
 package generic
 
 import (
+	"context"
 	"time"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,6 +35,7 @@ type RESTOptions struct {
 	EnableGarbageCollection   bool
 	DeleteCollectionWorkers   int
 	ResourcePrefix            string
+	KeyFuncs                  RESTOptionsKeyFuncs
 	CountMetricPollPeriod     time.Duration
 	StorageObjectCountTracker flowcontrolrequest.StorageObjectCountTracker
 }
@@ -41,6 +43,11 @@ type RESTOptions struct {
 // Implement RESTOptionsGetter so that RESTOptions can directly be used when available (i.e. tests)
 func (opts RESTOptions) GetRESTOptions(schema.GroupResource) (RESTOptions, error) {
 	return opts, nil
+}
+
+type RESTOptionsKeyFuncs interface {
+	KeyRootFunc(ctx context.Context) string
+	KeyFunc(ctx context.Context, name string) (string, error)
 }
 
 type RESTOptionsGetter interface {
