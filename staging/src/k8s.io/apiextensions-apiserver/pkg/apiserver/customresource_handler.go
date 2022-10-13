@@ -203,7 +203,9 @@ func NewCustomResourceDefinitionHandler(
 			ret.removeDeadStorage()
 		},
 	})
-	crConverterFactory, err := conversion.NewCRConverterFactory(serviceResolver, authResolverWrapper)
+	// TODO(jcmoraisjr): current implementation delegates field validation to the storage backend.
+	// This however needs to be properly parameterized.
+	crConverterFactory, err := conversion.NewCRConverterFactory(serviceResolver, authResolverWrapper, true)
 	if err != nil {
 		return nil, err
 	}

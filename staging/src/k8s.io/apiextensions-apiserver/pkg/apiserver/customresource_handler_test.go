@@ -70,6 +70,7 @@ func TestConvertFieldLabel(t *testing.T) {
 		name          string
 		clusterScoped bool
 		label         string
+		skipField     bool
 		expectError   bool
 	}{
 		{
@@ -102,6 +103,12 @@ func TestConvertFieldLabel(t *testing.T) {
 			label:       "some.other.field",
 			expectError: true,
 		},
+		{
+			name:        "namespace scoped - other field is not ok",
+			label:       "some.other.field",
+			skipField:   true,
+			expectError: false,
+		},
 	}
 
 	for _, test := range tests {
@@ -120,7 +127,7 @@ func TestConvertFieldLabel(t *testing.T) {
 			} else {
 				crd.Spec.Scope = apiextensionsv1.NamespaceScoped
 			}
-			f, err := conversion.NewCRConverterFactory(nil, nil)
+			f, err := conversion.NewCRConverterFactory(nil, nil, test.skipField)
 			if err != nil {
 				t.Fatal(err)
 			}

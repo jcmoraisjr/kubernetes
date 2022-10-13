@@ -33,6 +33,9 @@ type CRConverterFactory struct {
 	// webhookConverterFactory is the factory for webhook converters.
 	// This field should not be used if CustomResourceWebhookConversion feature is disabled.
 	webhookConverterFactory *webhookConverterFactory
+	// skipFieldValidation defines whether ConvertFieldLabel should validate field selector
+	// or leave validation to lower layers
+	skipFieldValidation bool
 }
 
 // converterMetricFactorySingleton protects us from reregistration of metrics on repeated
@@ -40,13 +43,14 @@ type CRConverterFactory struct {
 var converterMetricFactorySingleton = newConverterMetricFactory()
 
 // NewCRConverterFactory creates a new CRConverterFactory
-func NewCRConverterFactory(serviceResolver webhook.ServiceResolver, authResolverWrapper webhook.AuthenticationInfoResolverWrapper) (*CRConverterFactory, error) {
+func NewCRConverterFactory(serviceResolver webhook.ServiceResolver, authResolverWrapper webhook.AuthenticationInfoResolverWrapper, skipFieldValidation bool) (*CRConverterFactory, error) {
 	converterFactory := &CRConverterFactory{}
 	webhookConverterFactory, err := newWebhookConverterFactory(serviceResolver, authResolverWrapper)
 	if err != nil {
 		return nil, err
 	}
 	converterFactory.webhookConverterFactory = webhookConverterFactory
+	converterFactory.skipFieldValidation = skipFieldValidation
 	return converterFactory, nil
 }
 
@@ -87,6 +91,7 @@ func (m *CRConverterFactory) NewConverter(crd *apiextensionsv1.CustomResourceDef
 		validVersions: validVersions,
 		clusterScoped: crd.Spec.Scope == apiextensionsv1.ClusterScoped,
 		converter:     converter,
+		skipField:     m.skipFieldValidation,
 	}
 	return &safeConverterWrapper{unsafe}, unsafe, nil
 }
@@ -106,9 +111,13 @@ type crConverter struct {
 	converter     crConverterInterface
 	validVersions map[schema.GroupVersion]bool
 	clusterScoped bool
+	skipField     bool
 }
 
 func (c *crConverter) ConvertFieldLabel(gvk schema.GroupVersionKind, label, value string) (string, string, error) {
+	if c.skipField {
+		return label, value, nil
+	}
 	// We currently only support metadata.namespace and metadata.name.
 	switch {
 	case label == "metadata.name":
