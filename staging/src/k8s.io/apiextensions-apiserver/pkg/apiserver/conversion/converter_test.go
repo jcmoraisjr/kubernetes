@@ -154,7 +154,7 @@ func TestConversion(t *testing.T) {
 		},
 	}
 
-	CRConverterFactory, err := NewCRConverterFactory(nil, func(resolver webhook.AuthenticationInfoResolver) webhook.AuthenticationInfoResolver { return nil })
+	CRConverterFactory, err := NewCRConverterFactory(nil, func(resolver webhook.AuthenticationInfoResolver) webhook.AuthenticationInfoResolver { return nil }, false)
 	if err != nil {
 		t.Fatalf("Cannot create conversion factory: %v", err)
 	}
